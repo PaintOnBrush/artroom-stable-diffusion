@@ -48,7 +48,7 @@ def load_img(path, h0, w0):
     w, h = map(lambda x: x - x % 64, (w, h))  # resize to integer multiple of 32
 
     print(f"New image size ({w}, {h})")
-    image = image.resize((w, h), resample = Image.LANCZOS)
+    image = image.resize((w, h), resample = Image.Resampling.LANCZOS)
     image = np.array(image).astype(np.float32) / 255.0
     image = image[None].transpose(0, 3, 1, 2)
     image = torch.from_numpy(image)
@@ -62,6 +62,13 @@ parser.add_argument(
     nargs="?",
     default="a painting of a virus monster playing guitar",
     help="the prompt to render"
+)
+parser.add_argument(
+    "--negPrompt",
+    type=str,
+    nargs="?",
+    default="",
+    help="the prompt to not render"
 )
 parser.add_argument(
     "--outdir",
@@ -286,10 +293,14 @@ try:
         print("Prompt:",opt.prompt)
         assert prompt is not None
         data = [batch_size * [prompt]]
+        negative_prompt = opt.negPrompt
+        print("Negative Prompt:",opt.negPrompt)
+        negative_prompt_data = [batch_size * negative_prompt]
     else:
         with open(opt.from_file+"prompt.txt", "r") as f:
             opt.prompt = f.read().splitlines()[0]
             print("Prompt:",opt.prompt)
+            # data = list(chunk(opt.prompt, batch_size))
             data = [batch_size * [opt.prompt]]
         try:
             with open(opt.from_file+"negative_prompt.txt", "r") as f:
