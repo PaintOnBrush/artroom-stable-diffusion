@@ -45,6 +45,13 @@ parser.add_argument(
     help="the prompt to render"
 )
 parser.add_argument(
+    "--negPrompt",
+    type=str,
+    nargs="?",
+    default="",
+    help="the prompt to not render"
+)
+parser.add_argument(
     "--ckpt",
     type=str,
     help="path to checkpoint of model",
@@ -196,9 +203,20 @@ else:
 tic = time.time()
 os.makedirs(opt.outdir, exist_ok=True)
 outpath = opt.outdir
-
-print("init_seed = ", opt.seed)
-seed_everything(opt.seed)
+if opt.seed:
+    if opt.seed > 1 and opt.seed < 4294967295:
+        print("init_seed =", opt.seed)
+        seed_everything(opt.seed)
+    else:
+        print("Seed out of bounds. Using random seed")
+        opt.seed = random.randrange(1, 4294967295)
+        print("init_seed =", opt.seed)
+        seed_everything(opt.seed)
+else:
+    print("No seed specified. Using random seed")
+    opt.seed = random.randrange(1, 4294967295)
+    print("init_seed =", opt.seed)
+    seed_everything(opt.seed)
 
 
 sd = load_model_from_config(f"{ckpt}")
@@ -263,6 +281,9 @@ try:
         print("Prompt:",opt.prompt)
         assert prompt is not None
         data = [batch_size * [prompt]]
+        negative_prompt = opt.negPrompt
+        print("Negative Prompt:",opt.negPrompt)
+        negative_prompt_data = [batch_size * negative_prompt]
     else:
         with open(opt.from_file+"prompt.txt", "r") as f:
             opt.prompt = f.read().splitlines()[0]
