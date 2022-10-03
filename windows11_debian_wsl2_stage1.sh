@@ -37,3 +37,5 @@ conda env create -f environment.yaml
 conda init bash
 
 exit 0
+
+#restart then run windows11_debian_wsl2_stage2.sh in debian wsl2
